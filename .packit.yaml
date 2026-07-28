@@ -1,0 +1,104 @@
+actions:
+  # MPICH's git checkout is incomplete until its submodules are populated.
+  # Packit's default git archive does not include submodule contents, so create
+  # the source archive explicitly from the main repository and all submodules.
+  create-archive:
+    - git submodule update --init --recursive
+    - bash -c 'mkdir -p .packit && git ls-files -z --recurse-submodules | tar --null --transform "s|^|${PACKIT_PROJECT_NAME_VERSION}/|SH" -caf ".packit/${PACKIT_PROJECT_NAME_VERSION}.tar.gz" -T -'
+    - bash -c 'echo ".packit/${PACKIT_PROJECT_NAME_VERSION}.tar.gz"'
+
+packages:
+  mpich-fedora: &mpich-package
+    specfile_path: packaging/rpm/mpich.spec
+    upstream_package_name: mpich
+    downstream_package_name: mpich
+    files_to_sync:
+      - src: packaging/rpm/
+        dest: ./
+        delete: true
+        filters:
+          - "protect .git*"
+          - "protect sources"
+          - "protect changelog"
+      - .packit.yaml
+
+  mpich-centos:
+    <<: *mpich-package
+    pkg_tool: centpkg
+    files_to_sync:
+      - src: packaging/rpm/
+        dest: ./
+        delete: true
+        filters:
+          - "protect .git*"
+          - "protect sources"
+          - "protect changelog"
+          - "protect tests/"
+          - "protect gating.yaml"
+
+targets:
+  # Latest versioned Fedora
+  - fedora-latest-x86_64
+  - fedora-latest-aarch64
+  - fedora-latest-ppc64le
+  - fedora-latest-s390x
+  - fedora-latest-i386
+  # Rawhide
+  - fedora-development-x86_64
+  - fedora-development-aarch64
+  - fedora-development-ppc64le
+  - fedora-development-s390x
+  - fedora-development-i386
+  # Latest CentOS Stream currently available
+  - centos-stream-10-x86_64
+  - centos-stream-10-aarch64
+  - centos-stream-10-ppc64le
+  - centos-stream-10-s390x
+  # Fedora ELN
+  - fedora-eln-x86_64
+  - fedora-eln-aarch64
+  - fedora-eln-ppc64le
+  - fedora-eln-s390x
+
+jobs:
+  - &copr_build
+    job: copr_build
+    trigger: release
+    packages:
+      - mpich-fedora
+  - <<: *copr_build
+    trigger: commit
+    branch: main
+  - <<: *copr_build
+    trigger: pull_request
+    manual_trigger: true
+
+  # Fedora Rawhide
+  - job: propose_downstream
+    trigger: release
+    packages:
+      - mpich-fedora
+    dist_git_branches:
+      - main
+
+  # Latest CentOS Stream
+  - job: propose_downstream
+    trigger: release
+    packages:
+      - mpich-centos
+    dist_git_branches:
+      - c11s
+
+  - job: koji_build
+    trigger: commit
+    packages:
+      - mpich-fedora
+    dist_git_branches:
+      - fedora-all
+
+  - job: bodhi_update
+    trigger: commit
+    packages:
+      - mpich-fedora
+    dist_git_branches:
+      - fedora-branched
