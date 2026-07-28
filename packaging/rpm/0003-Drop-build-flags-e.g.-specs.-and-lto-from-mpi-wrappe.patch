@@ -1,0 +1,23 @@
+diff --git a/src/env/mpicc.def b/src/env/mpicc.def
+index 3c2e2ca072..a5228465c7 100644
+--- a/src/env/mpicc.def
++++ b/src/env/mpicc.def
+@@ -476,14 +476,14 @@ subcode: set_final_vars
+     $(if:cc=fc)
+         $call set_fc_final_vars
+ 
+-    final_$(cflags)="@MPICH_$(MPICC)_$(CFLAGS)@ @WRAPPER_$(CFLAGS)@"
++    final_$(cflags)="@MPICH_$(MPICC)_$(CFLAGS)@"
+     $(if:cc!=fc)
+-        final_cppflags="@MPICH_$(MPICC)_CPPFLAGS@ @WRAPPER_CPPFLAGS@"
+-    final_ldflags="@MPICH_$(MPICC)_LDFLAGS@ @WRAPPER_LDFLAGS@"
++        final_cppflags="@MPICH_$(MPICC)_CPPFLAGS@"
++    final_ldflags="@MPICH_$(MPICC)_LDFLAGS@"
+     final_libs="@MPICH_$(MPICC)_LIBS@"
+     if test "@INTERLIB_DEPS@" = "no" -o "${interlib_deps}" = "no" ; then
+         final_ldflags="${final_ldflags} @WRAPPER_DEPENDENCY_LDFLAGS@"
+-        final_libs="${final_libs} __LIBS_TO_BE_FILLED_AT_INSTALL_TIME__"
++        final_libs="${final_libs}"
+     fi
+ 
+     $(if:cc=cc or cc=cxx)
