@@ -35,6 +35,7 @@ BuildRequires:  libfabric-devel
 BuildRequires:  libnl3-devel
 BuildRequires:  libuuid-devel
 BuildRequires:  numactl-devel
+BuildRequires:  rubygem-asciidoctor
 %ifarch aarch64 ppc64le x86_64 riscv64
 BuildRequires:  ucx-devel
 %endif
@@ -127,7 +128,7 @@ mpich support for Python 3.
 %autosetup -p1
 
 %build
-./autogen.sh
+./autogen.sh --with-doc
 
 CONFIGURE_OPTS=(
         --with-custom-version-string=%{version}-%{release}
@@ -170,6 +171,7 @@ sed -r -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 #Try and work around 'unused-direct-shlib-dependency' rpmlint warnning
 sed -i -e 's| -shared | -Wl,--as-needed\0|g' libtool
 
+%make_build mandoc
 %make_build VERBOSE=1
 
 %install
